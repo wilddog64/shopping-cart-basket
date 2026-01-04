@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: basket-service-config
+  labels:
+    app.kubernetes.io/name: basket-service
+    app.kubernetes.io/part-of: shopping-cart
+data:
+  REDIS_HOST: "redis-cart.shopping-cart-data.svc.cluster.local"
+  REDIS_PORT: "6379"
+  CART_TTL: "168h"
+  OAUTH2_ENABLED: "true"
+  OAUTH2_ISSUER_URI: "http://keycloak.identity.svc.cluster.local:8080/realms/shopping-cart"
+  RABBITMQ_HOST: "rabbitmq-headless.shopping-cart-data.svc.cluster.local"
+  LOG_LEVEL: "info"
