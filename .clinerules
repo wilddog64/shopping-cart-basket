@@ -1,0 +1,163 @@
+# Project Rules
+
+## Tech Stack
+
+- **Language**: Go 1.21+
+- **HTTP Framework**: Gin (github.com/gin-gonic/gin v1.9.1)
+- **Storage**: Redis via go-redis/v9
+- **Messaging**: RabbitMQ (event publishing only, optional dependency)
+- **Auth**: OAuth2/OIDC via Keycloak; JWT validation using golang-jwt/jwt v5
+- **Metrics**: Prometheus via prometheus/client_golang v1.17.0
+- **Logging**: Structured logging with uber-go/zap v1.26.0
+- **Testing**: testify v1.8.4
+- **Build**: Go modules, Makefile
+- **Container**: Docker multi-stage build, non-root user (UID 1000)
+- **Orchestration**: Kubernetes with Kustomize (k8s/base/)
+- **CI**: GitHub Actions (.github/workflows/go-ci.yml)
+
+## Architecture
+
+Strict three-layer architecture:
+
+1. **Handler layer** (`internal/handler/`) - HTTP request/response, input validation, middleware (auth, logging, correlation ID, rate limiting, security headers)
+2. **Service layer** (`internal/service/`) - Business logic and orchestration
+3. **Repository layer** (`internal/repository/`) - Redis data access only
+
+Supporting packages:
+- `internal/config/` - Environment-based configuration via `config.Load()`
+- `internal/auth/` - JWT validation and JWKS endpoint calls
+- `internal/event/` - RabbitMQ event publisher
+- `internal/model/` - Domain models (Cart, CartItem) and event envelope structures
+- `pkg/response/` - Shared HTTP response helpers
+- `cmd/server/` - Application entry point and Gin router setup
+
+The service is entirely stateless; all cart state lives in Redis with TTL-based expiration. Key pattern: `cart:{customerID}` (JSON-serialized).
+
+## Code Conventions
+
+- Follow standard Go conventions (Effective Go, Go Code Review Comments)
+- Format with `go fmt` and `goimports` — run `make fmt` before committing
+- Wrap errors with context: `fmt.Errorf("action failed: %w", err)`
+- Use interfaces for testability: `CartRepository` interface, `EventPublisher` interface
+- Always propagate `context.Context` as the first argument
+- Use `zap.Logger` for structured logging; never use `fmt.Println` or standard `log`
+- Use `uuid.New().String()` (google/uuid) for all ID generation
+- Config loaded once via `config.Load()` and injected via constructors
+- Use sentinel errors (`var ErrXxx = errors.New(...)`) and `errors.Is()` for checking
+- Struct tags use `json:"camelCase"` and `binding:"..."` (Gin validation) on request DTOs
+- Cart max items: 100 (constant `MaxCartItems` in service package)
+- Setting item quantity to 0 via UpdateItemQuantity removes the item
+- Adding an item with an existing `productId` increments quantity (no duplicates)
+
+## Testing
+
+- **Unit tests**: no external dependencies; mock `CartRepository` interface; run with `make test` or `make test-unit`
+- **Integration tests**: require real Redis; tagged with `//go:build integration`
+  - Auto port-forward to K8s Redis: `make test-integration`
+  - CI mode with explicit env vars: `REDIS_ADDR=host:6379 REDIS_PASSWORD=secret make test-integration-ci`
+  - K8s Redis password: `kubectl get secret -n shopping-cart-data redis-cart-secret -o jsonpath='{.data.password}' | base64 -d`
+- Use `testify/assert` and `testify/require` for assertions
+- Use `testify/mock` for mocks; generate with `make mocks` (requires mockgen)
+- Coverage report: `make coverage` → produces `coverage.html`
+- Do NOT use real Redis in unit tests; always mock the repository interface
+
+## Build & Run
+
+```bash
+# Download dependencies
+go mod download
+
+# Run locally (requires Redis accessible)
+make run
+
+# Build binary (output: bin/cart-service)
+make build
+
+# Format code
+make fmt
+
+# Lint (golangci-lint or go vet fallback)
+make lint
+
+# Unit tests
+make test
+
+# Integration tests (auto port-forward to K8s Redis)
+make test-integration
+
+# Integration tests in CI
+REDIS_ADDR=host:6379 REDIS_PASSWORD=secret make test-integration-ci
+
+# Coverage report
+make coverage
+
+# Build Docker image
+make docker-build
+
+# Run Docker container
+make docker-run
+
+# Generate mocks
+make mocks
+
+# Deploy to Kubernetes
+kubectl apply -k k8s/base
+```
+
+Key environment variables (with defaults):
+- `SERVER_PORT=8083`
+- `REDIS_HOST=localhost`, `REDIS_PORT=6379`, `REDIS_PASSWORD=`, `REDIS_DB=0`
+- `CART_TTL=168h` (7 days)
+- `OAUTH2_ENABLED=false`, `OAUTH2_ISSUER_URI=`, `OAUTH2_CLIENT_ID=cart-service`
+- `RABBITMQ_HOST=localhost`, `RABBITMQ_PORT=5672`, `RABBITMQ_USERNAME=guest`, `RABBITMQ_PASSWORD=guest`
+- `VAULT_ENABLED=false`, `VAULT_ADDR=http://localhost:8200`, `VAULT_ROLE=cart-service`
+- `LOG_LEVEL=info`
+- `RATE_LIMIT_RPS=100`, `RATE_LIMIT_BURST=50`
+
+Dev shortcut (no OAuth2): use `X-User-ID: <userId>` header instead of Bearer token when `OAUTH2_ENABLED=false`.
+
+## Key Patterns
+
+### Event Envelope
+All RabbitMQ events use a common envelope (defined in `internal/model/event.go`):
+```json
+{
+  "id": "uuid",
+  "type": "cart.checkout",
+  "version": "1.0",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "source": "cart-service",
+  "correlationId": "uuid",
+  "data": { ... }
+}
+```
+Exchange: `events`
+Routing keys: `cart.created`, `cart.updated`, `cart.cleared`, `cart.checkout`
+Event publish failures on non-checkout operations are logged as warnings but do not fail the request. Checkout event failure is fatal (returns error to client).
+
+### API Response Format
+All responses use `pkg/response` helpers:
+```json
+{ "success": true, "data": { ... } }
+{ "success": false, "error": { "code": "ERROR_CODE", "message": "..." } }
+```
+
+### Error Mapping
+- `repository.ErrCartNotFound` → 404
+- `service.ErrCartEmpty` → 400
+- `service.ErrItemNotFound` → 404
+- `service.ErrMaxItemsExceeded` → 400
+
+### Correlation ID
+Thread `X-Correlation-ID` header through context: `service.SetCorrelationID(ctx, id)` / `getCorrelationID(ctx)`.
+
+### Security Headers (set by middleware)
+X-XSS-Protection, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Content-Security-Policy, Strict-Transport-Security
+
+### Kubernetes Deployment
+- Namespace: `shopping-cart-apps`
+- Redis secret: namespace `shopping-cart-data`, secret name `redis-cart-secret`, key `password`
+- Prometheus annotations on pod: port 8083, path `/metrics`
+- 2 replicas, pod anti-affinity across nodes
+- Pod security: non-root (UID 1000), read-only root filesystem, all Linux capabilities dropped
+- Resources: requests 100m CPU / 128Mi RAM; limits 500m CPU / 256Mi RAM
