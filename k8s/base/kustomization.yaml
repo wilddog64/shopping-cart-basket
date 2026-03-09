@@ -15,4 +15,4 @@ commonLabels:
 
 images:
   - name: shopping-cart-basket
-    newTag: latest
+    newTag: sha-d3516742aac20727942a695f70146b574a1604af
