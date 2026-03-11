@@ -51,3 +51,24 @@ The CLAUDE.md marks the project as "In Development" — the codebase is in an ac
 - The `Dockerfile.local` variant exists for local Docker builds with different defaults
 - `bin/port-forward.sh` and `bin/run-local.sh` scripts assist with local development setup (referenced in README but not listed in file tree — may need creation)
 - `checksum/redis-secret` annotation in deployment.yaml must be updated manually after Redis password rotation
+
+## CI Blocker — OPEN (2026-03-11)
+
+**Failing since:** 2026-03-09
+**Failing job:** `Publish / build-push` → Trivy scanner installation
+
+**Error:**
+```
+aquasecurity/trivy info found version: 0.60.0 for v0.60.0/Linux/64bit
+##[error]Process completed with exit code 1.
+```
+
+**Root cause:** Custom Trivy install script (`bash ./trivy/contrib/install.sh`) in the shared reusable
+workflow at `shopping-cart-infra/.github/workflows/build-push-deploy.yml` fails during binary download.
+
+**Fix (shared with shopping-cart-product-catalog — fix once in infra repo):**
+Replace custom script with `aquasecurity/trivy-action@0.30.0`; update pinned commit hash in this repo's caller workflow.
+
+**Impact chain:** CI blocks ghcr.io push → ArgoCD cannot sync → ImagePullBackOff on Ubuntu k3s cluster.
+
+**Priority:** P1 — assigned to v0.8.0 milestone. See `k3d-manager/docs/issues/2026-03-11-shopping-cart-ci-failures.md`.
