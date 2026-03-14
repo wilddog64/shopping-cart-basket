@@ -52,23 +52,17 @@ The CLAUDE.md marks the project as "In Development" — the codebase is in an ac
 - `bin/port-forward.sh` and `bin/run-local.sh` scripts assist with local development setup (referenced in README but not listed in file tree — may need creation)
 - `checksum/redis-secret` annotation in deployment.yaml must be updated manually after Redis password rotation
 
-## CI Blocker — OPEN (2026-03-11)
+## CI Status — 2026-03-14
 
-**Failing since:** 2026-03-09
-**Failing job:** `Publish / build-push` → Trivy scanner installation
+- ✅ Publish workflow now succeeds after switching the shared reusable workflow to `aquasecurity/trivy-action@0.30.0`.
+- ✅ golangci-lint gate on `feature/p4-linter` (PR [#1](https://github.com/wilddog64/shopping-cart-basket/pull/1)) is green per run `23094080858`, which validated commit `3508a9e9161e3704620e01258a57cb0af860fa65` via `gh api`. The lint fixes were applied in commit `7b9dd065384dca3d3498859d82ea2a8ff7ba9d52` by wrapping `logger.Sync()` in `cmd/server/main.go` with a deferred function that ignores the error and running `gofmt -s` on `main.go` and `internal/model/cart.go`.
 
-**Error:**
-```
-aquasecurity/trivy info found version: 0.60.0 for v0.60.0/Linux/64bit
-##[error]Process completed with exit code 1.
-```
+## P4 Linter Task — Assigned to Codex (2026-03-14)
 
-**Root cause:** Custom Trivy install script (`bash ./trivy/contrib/install.sh`) in the shared reusable
-workflow at `shopping-cart-infra/.github/workflows/build-push-deploy.yml` fails during binary download.
+**Branch:** `feature/p4-linter`
+**Spec:** `wilddog64/shopping-cart-infra/docs/plans/p4-linter-basket.md`
+**PR:** https://github.com/wilddog64/shopping-cart-basket/pull/1
+**Verified CI run:** `23094080858` — conclusion `success`
+**Verified commit:** `3508a9e9161e3704620e01258a57cb0af860fa65` (via `gh api`)
 
-**Fix (shared with shopping-cart-product-catalog — fix once in infra repo):**
-Replace custom script with `aquasecurity/trivy-action@0.30.0`; update pinned commit hash in this repo's caller workflow.
-
-**Impact chain:** CI blocks ghcr.io push → ArgoCD cannot sync → ImagePullBackOff on Ubuntu k3s cluster.
-
-**Priority:** P1 — assigned to v0.8.0 milestone. See `k3d-manager/docs/issues/2026-03-11-shopping-cart-ci-failures.md`.
+golangci-lint now passes after addressing the errcheck and gofmt findings noted above.
