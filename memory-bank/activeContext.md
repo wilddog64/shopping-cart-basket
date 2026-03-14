@@ -60,3 +60,15 @@ The CLAUDE.md marks the project as "In Development" — the codebase is in an ac
   - `cmd/server/main.go` and `internal/model/cart.go` — not gofmt-ed with `-s`
 
 Latest GitHub Actions runs for PR #1 all fail with the same golangci-lint findings above. Decide whether to address these issues or relax the configuration before merging.
+
+## P4 Linter Task — Assigned to Codex (2026-03-14)
+
+**Branch:** `feature/p4-linter` — PR #1 open, CI failing
+**Spec:** `wilddog64/shopping-cart-infra/docs/plans/p4-linter-basket.md`
+**Failing run:** `23093481713`
+
+**Fix required:**
+1. `cmd/server/main.go:32` — change `defer logger.Sync()` to `defer func() { _ = logger.Sync() }()`
+2. Run `gofmt -s -w internal/model/cart.go main.go` to fix formatting
+
+Do NOT update this memory-bank until CI shows `completed success`.
