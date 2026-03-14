@@ -29,7 +29,9 @@ func main() {
 
 	// Initialize logger
 	logger := initLogger(cfg.LogLevel)
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync()
+	}()
 
 	logger.Info("starting cart service",
 		zap.String("version", version),

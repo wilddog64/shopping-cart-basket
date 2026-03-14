@@ -157,15 +157,15 @@ type ShippingAddress struct {
 
 // CartResponse represents the cart API response
 type CartResponse struct {
-	ID          string         `json:"id"`
-	CustomerID  string         `json:"customerId"`
-	Items       []CartItem     `json:"items"`
-	ItemCount   int            `json:"itemCount"`
-	TotalAmount float64        `json:"totalAmount"`
-	Currency    string         `json:"currency"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
-	ExpiresAt   time.Time      `json:"expiresAt"`
+	ID          string     `json:"id"`
+	CustomerID  string     `json:"customerId"`
+	Items       []CartItem `json:"items"`
+	ItemCount   int        `json:"itemCount"`
+	TotalAmount float64    `json:"totalAmount"`
+	Currency    string     `json:"currency"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
+	ExpiresAt   time.Time  `json:"expiresAt"`
 }
 
 // ToResponse converts a Cart to CartResponse
