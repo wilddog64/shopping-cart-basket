@@ -52,23 +52,11 @@ The CLAUDE.md marks the project as "In Development" — the codebase is in an ac
 - `bin/port-forward.sh` and `bin/run-local.sh` scripts assist with local development setup (referenced in README but not listed in file tree — may need creation)
 - `checksum/redis-secret` annotation in deployment.yaml must be updated manually after Redis password rotation
 
-## CI Blocker — OPEN (2026-03-11)
+## CI Status — 2026-03-14
 
-**Failing since:** 2026-03-09
-**Failing job:** `Publish / build-push` → Trivy scanner installation
+- ✅ Publish workflow now succeeds after switching the shared reusable workflow to `aquasecurity/trivy-action@0.30.0`.
+- 🔴 New golangci-lint gate (branch `feature/p4-linter`, PR #1) fails due to pre-existing issues:
+  - `cmd/server/main.go:32` — `logger.Sync()` return value not checked (errcheck)
+  - `cmd/server/main.go` and `internal/model/cart.go` — not gofmt-ed with `-s`
 
-**Error:**
-```
-aquasecurity/trivy info found version: 0.60.0 for v0.60.0/Linux/64bit
-##[error]Process completed with exit code 1.
-```
-
-**Root cause:** Custom Trivy install script (`bash ./trivy/contrib/install.sh`) in the shared reusable
-workflow at `shopping-cart-infra/.github/workflows/build-push-deploy.yml` fails during binary download.
-
-**Fix (shared with shopping-cart-product-catalog — fix once in infra repo):**
-Replace custom script with `aquasecurity/trivy-action@0.30.0`; update pinned commit hash in this repo's caller workflow.
-
-**Impact chain:** CI blocks ghcr.io push → ArgoCD cannot sync → ImagePullBackOff on Ubuntu k3s cluster.
-
-**Priority:** P1 — assigned to v0.8.0 milestone. See `k3d-manager/docs/issues/2026-03-11-shopping-cart-ci-failures.md`.
+Latest GitHub Actions runs for PR #1 all fail with the same golangci-lint findings above. Decide whether to address these issues or relax the configuration before merging.
