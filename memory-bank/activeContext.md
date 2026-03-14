@@ -55,14 +55,14 @@ The CLAUDE.md marks the project as "In Development" — the codebase is in an ac
 ## CI Status — 2026-03-14
 
 - ✅ Publish workflow now succeeds after switching the shared reusable workflow to `aquasecurity/trivy-action@0.30.0`.
-- ✅ golangci-lint gate on `feature/p4-linter` (PR [#1](https://github.com/wilddog64/shopping-cart-basket/pull/1)) is green as of run `23093905213` (commit `b21a21c54716bcb139a432fad038666fa27d35c3`, verified via `gh api`). The lint fixes were applied in commit `7b9dd065384dca3d3498859d82ea2a8ff7ba9d52` by wrapping `logger.Sync()` in `cmd/server/main.go` with a deferred function that ignores the error and running `gofmt -s` on `main.go` and `internal/model/cart.go`.
+- ✅ golangci-lint gate on `feature/p4-linter` (PR [#1](https://github.com/wilddog64/shopping-cart-basket/pull/1)) is green as of run `23093980650` (commit `ee3ba2949a8410699958de3023217a95e67ac616`, verified via `gh api`). The lint fixes were applied in commit `7b9dd065384dca3d3498859d82ea2a8ff7ba9d52` by wrapping `logger.Sync()` in `cmd/server/main.go` with a deferred function that ignores the error and running `gofmt -s` on `main.go` and `internal/model/cart.go`.
 
 ## P4 Linter Task — Assigned to Codex (2026-03-14)
 
 **Branch:** `feature/p4-linter`
 **Spec:** `wilddog64/shopping-cart-infra/docs/plans/p4-linter-basket.md`
 **PR:** https://github.com/wilddog64/shopping-cart-basket/pull/1
-**Latest CI run:** `23093905213` — conclusion `success`
-**Latest commit:** `b21a21c54716bcb139a432fad038666fa27d35c3` (verified)
+**Latest CI run:** `23093980650` — conclusion `success`
+**Latest commit:** `ee3ba2949a8410699958de3023217a95e67ac616` (verified)
 
 golangci-lint now passes after addressing the errcheck and gofmt findings noted above.
