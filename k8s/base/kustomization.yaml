@@ -15,4 +15,5 @@ commonLabels:
 
 images:
   - name: shopping-cart-basket
+    newName: ghcr.io/wilddog64/shopping-cart-basket
     newTag: sha-d3516742aac20727942a695f70146b574a1604af
