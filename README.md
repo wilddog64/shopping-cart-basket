@@ -225,4 +225,4 @@ shopping-cart-basket/
 ---
 
 ## License
-MIT
+Apache 2.0
