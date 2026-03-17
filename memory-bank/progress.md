@@ -46,6 +46,8 @@
 - [x] docs/api/README.md — API reference
 - [x] docs/architecture/README.md — architecture diagrams and component details
 - [x] docs/troubleshooting/README.md
+- [x] docs/testing/README.md — Go unit + integration test workflow, coverage, linting (added 2026-03-17)
+- [x] docs/issues/2026-03-17-readme-standardization.md — documents README/docs drift + resolution
 
 ## What's Pending / Known Gaps
 
