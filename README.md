@@ -17,11 +17,8 @@ A Go 1.21 microservice that manages shopping-cart sessions. It exposes REST APIs
 # Install dependencies
 go mod download
 
-# Start Redis port-forward from Kubernetes (optional helper)
-./bin/port-forward.sh
-
-# Run the service locally (auto-starts Redis forward with --start-redis)
-./bin/run-local.sh --start-redis
+# Run the service locally
+go run ./cmd/server
 
 # Build binary / Docker image
 make build
@@ -63,7 +60,7 @@ make coverage
 | Storage | Redis |
 | Messaging | RabbitMQ |
 | Auth | Keycloak OAuth2/OIDC |
-| CI | GitHub Actions + Trivy + golangci-lint |
+| CI | GitHub Actions + golangci-lint + govulncheck |
 
 ### Environment Variables
 | Variable | Default | Description |
@@ -79,6 +76,7 @@ make coverage
 | `RABBITMQ_HOST` | localhost | RabbitMQ host |
 | `RABBITMQ_PORT` | 5672 | RabbitMQ port |
 | `LOG_LEVEL` | info | zap log level |
+| `REDIS_ADDR` | – | **Test-only** — overrides `REDIS_HOST`/`REDIS_PORT` for integration tests (`host:port`) |
 
 ### API Endpoints
 | Method | Path | Description | Auth |
@@ -129,21 +127,13 @@ curl -X POST http://localhost:8083/api/v1/cart/checkout \
 ```
 
 ### Integration Tests in CI (External Redis)
-For CI environments that connect to the shared Redis instance, export the credentials and use the `test-integration-ci` target:
+For CI environments that connect to the shared Redis instance, set `REDIS_ADDR` and `REDIS_PASSWORD` from your secret manager (e.g. Vault/ESO) and use the `test-integration-ci` target:
 ```bash
-# Grab password from Kubernetes secret
-kubectl get secret -n shopping-cart-data redis-cart-secret \
-  -o jsonpath='{.data.password}' | base64 -d
-
 # Run integration tests pointing at external Redis
 REDIS_ADDR=redis.example.com:6379 \
-REDIS_PASSWORD=<password> \
+REDIS_PASSWORD=<from-vault> \
 make test-integration-ci
 ```
-
-| Secret | Namespace | Key |
-|--------|-----------|-----|
-| `redis-cart-secret` | `shopping-cart-data` | `password` |
 
 ### Authentication
 1. Users authenticate via Keycloak; JWTs are validated via JWKS.

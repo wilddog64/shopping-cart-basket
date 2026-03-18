@@ -20,10 +20,9 @@ go test ./...
 Key spec files:
 - `internal/model/cart_test.go` — domain logic validation
 - `internal/service/cart_service_test.go` — service behavior with mocks
-- `pkg/response/response_test.go` — response helpers
 
 ## Integration Tests
-These suites connect to a live Redis instance. The Make targets automatically spin up a port-forward when run inside the Kubernetes cluster context.
+These suites connect to a live Redis instance. `make test-integration` expects Redis reachable on `localhost:6379` (set `REDIS_PASSWORD` if needed). `make test-integration-ci` requires `REDIS_ADDR` and `REDIS_PASSWORD` env vars and a working `kubectl` context with access to the `shopping-cart-data` namespace.
 ```bash
 # Run Redis-backed integration suite
 make test-integration
