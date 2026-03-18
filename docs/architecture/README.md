@@ -6,47 +6,44 @@ The Cart Service is a stateless Go microservice that manages shopping cart sessi
 
 ## System Architecture
 
-```
-                     ┌─────────────────┐
-                     │   Keycloak      │
-                     │   (OAuth2/OIDC) │
-                     └────────┬────────┘
-                              │ JWT Validation
-                              ▼
-┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
-│   Client    │────▶│  Cart Service   │────▶│    Redis    │
-│   (HTTP)    │     │   (Go/Gin)      │     │   (State)   │
-└─────────────┘     └────────┬────────┘     └─────────────┘
-                              │
-                              │ Events
-                              ▼
-                     ┌─────────────────┐
-                     │    RabbitMQ     │
-                     │   (Messaging)   │
-                     └─────────────────┘
+```mermaid
+graph TD
+    KC[Keycloak<br>OAuth2/OIDC<br>optional]
+    Client[Client<br>HTTP]
+    CS[Cart Service<br>Go/Gin]
+    Redis[Redis<br>State]
+    RMQ[RabbitMQ<br>Messaging<br>optional]
+
+    KC -.->|JWT Validation<br>if OAUTH2_ENABLED| CS
+    Client -->|HTTP| CS
+    CS --> Redis
+    CS -.->|Events| RMQ
 ```
 
 ## Component Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        HTTP Layer (Gin)                          │
-├─────────────────────────────────────────────────────────────────┤
-│  Middleware: Auth │ Logging │ Correlation │ Rate Limit │ Security│
-├─────────────────────────────────────────────────────────────────┤
-│                          Handlers                                 │
-│  CartHandler    │    HealthHandler    │    MetricsHandler         │
-├─────────────────────────────────────────────────────────────────┤
-│                          Service                                  │
-│                       CartService                                 │
-│  - GetCart()     - AddItem()      - UpdateItemQuantity()         │
-│  - RemoveItem()  - ClearCart()    - Checkout()                   │
-├─────────────────────────────────────────────────────────────────┤
-│             Repository              │          Events             │
-│      RedisCartRepository           │      EventPublisher          │
-├─────────────────────────────────────────────────────────────────┤
-│               Redis                 │         RabbitMQ            │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph http[HTTP Layer - Gin]
+        MW[Middleware: Auth · Logging · Correlation · Rate Limit · Security]
+        H[Handlers: CartHandler · HealthHandler · MetricsHandler]
+    end
+    subgraph svc[Service]
+        CS[CartService<br>GetCart · AddItem · UpdateItemQuantity<br>RemoveItem · ClearCart · Checkout]
+    end
+    subgraph infra[Infrastructure]
+        Repo[RedisCartRepository]
+        Pub[EventPublisher]
+    end
+    Redis[(Redis)]
+    RMQ[(RabbitMQ)]
+
+    MW --> H
+    H --> CS
+    CS --> Repo
+    CS --> Pub
+    Repo --> Redis
+    Pub --> RMQ
 ```
 
 ## Data Model
