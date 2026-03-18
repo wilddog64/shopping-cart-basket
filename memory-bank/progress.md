@@ -37,6 +37,7 @@
 - [x] .github/workflows/go-ci.yml — CI pipeline
 - [x] .gitignore
 - [x] go.mod / go.sum
+- [x] CI multi-arch workflow pin — `.github/workflows/go-ci.yml` now references `build-push-deploy.yml@999f8d7` so ghcr publishes amd64+arm64 images (2026-03-17).
 
 ### Documentation
 - [x] CLAUDE.md — AI assistant guidance

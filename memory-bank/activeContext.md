@@ -20,6 +20,7 @@ CI green. All PRs merged to main. Branch protection active.
 
 ## Active Task
 
+- **Multi-arch workflow pin** — branch `fix/multiarch-workflow-pin` updates `.github/workflows/go-ci.yml` to reference infra SHA `999f8d7` so CI publishes amd64+arm64 images.
 - **v0.1.0 release** — cut `release/v0.1.0` from main, add CHANGELOG, open PR, tag after merge.
 
 ## Agent Instructions
