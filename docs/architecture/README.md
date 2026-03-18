@@ -8,16 +8,16 @@ The Cart Service is a stateless Go microservice that manages shopping cart sessi
 
 ```mermaid
 graph TD
-    KC[Keycloak<br>OAuth2/OIDC]
+    KC[Keycloak<br>OAuth2/OIDC<br>optional]
     Client[Client<br>HTTP]
     CS[Cart Service<br>Go/Gin]
     Redis[Redis<br>State]
-    RMQ[RabbitMQ<br>Messaging]
+    RMQ[RabbitMQ<br>Messaging<br>optional]
 
-    KC -->|JWT Validation| CS
+    KC -.->|JWT Validation<br>if OAUTH2_ENABLED| CS
     Client -->|HTTP| CS
     CS --> Redis
-    CS -->|Events| RMQ
+    CS -.->|Events| RMQ
 ```
 
 ## Component Architecture
