@@ -22,7 +22,7 @@ Key spec files:
 - `internal/service/cart_service_test.go` — service behavior with mocks
 
 ## Integration Tests
-These suites connect to a live Redis instance. `make test-integration` expects Redis reachable on `localhost:6379` (set `REDIS_PASSWORD` if needed). `make test-integration-ci` requires `REDIS_ADDR` and `REDIS_PASSWORD` env vars and a working `kubectl` context with access to the `shopping-cart-data` namespace.
+These suites connect to a live Redis instance. `make test-integration` expects Redis reachable on `localhost:6379` (set `REDIS_PASSWORD` if needed). `make test-integration-ci` requires `REDIS_ADDR` and `REDIS_PASSWORD` env vars pointing at a reachable Redis instance — no `kubectl` context required.
 ```bash
 # Run Redis-backed integration suite
 make test-integration
