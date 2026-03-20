@@ -30,7 +30,7 @@ make docker-build
 # Unit tests
 make test-unit
 
-# Integration tests (requires Redis)
+# Integration tests (requires Redis on localhost:6379)
 make test-integration
 
 # CI variant with external Redis
