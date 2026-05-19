@@ -10,6 +10,6 @@ data:
   REDIS_PORT: "6379"
   CART_TTL: "168h"
   OAUTH2_ENABLED: "true"
-  OAUTH2_ISSUER_URI: "http://keycloak.shopping-cart.local/realms/shopping-cart"
+  OAUTH2_ISSUER_URI: "https://keycloak.3ai-talk.org/realms/shopping-cart"
   RABBITMQ_HOST: "rabbitmq-headless.shopping-cart-data.svc.cluster.local"
   LOG_LEVEL: "info"
