@@ -2,6 +2,17 @@
 
 ## What's Built
 
+### Guest Cart (branch: feat/guest-cart)
+- [x] Added guest cart config: `GUEST_CART_TTL` and `GUEST_TOKEN_SECRET`
+- [x] Added signed guest token mint/verify flow in `internal/auth/guest.go` with unit coverage
+- [x] Added `GuestOrAuthMiddleware` so cart routes admit JWT users or signed guest tokens
+- [x] Added guest checkout guard and `POST /api/v1/cart/merge` handler
+- [x] Added guest-aware rolling TTL logic and guest-to-user merge flow in `CartService`
+- [x] Wired guest token manager through `cmd/server/main.go`, including ephemeral-secret fallback when config is unset
+- [x] Updated cart service tests for guest TTL, rolling expiry, and merge behavior
+- [ ] Local verification pending in this environment: `go version` returned `command not found`, so `go build ./...`, `go vet ./...`, and `go test ./...` were not run here
+- [x] Backend implementation pushed to `origin/feat/guest-cart` at commit `2ba9114`
+
 ### Core Application
 - [x] Domain model: `Cart`, `CartItem`, `ShippingAddress` with all business methods
 - [x] Request/response DTOs: `AddItemRequest`, `UpdateItemRequest`, `CheckoutRequest`, `CartResponse`
