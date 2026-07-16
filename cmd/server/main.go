@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
@@ -56,10 +58,22 @@ func main() {
 	publisher := event.NewPublisher("events", logger, cfg.RabbitMQHost != "")
 
 	// Initialize service
-	cartService := service.NewCartService(repo, publisher, cfg.CartTTL, logger)
+	cartService := service.NewCartService(repo, publisher, cfg.CartTTL, cfg.GuestCartTTL, logger)
+
+	// Initialize guest token manager (falls back to an ephemeral secret in dev)
+	guestSecret := cfg.GuestTokenSecret
+	if guestSecret == "" {
+		buf := make([]byte, 32)
+		if _, err := rand.Read(buf); err != nil {
+			logger.Fatal("failed to generate guest token secret", zap.Error(err))
+		}
+		guestSecret = base64.RawURLEncoding.EncodeToString(buf)
+		logger.Warn("GUEST_TOKEN_SECRET not set - using an ephemeral secret; guest carts will not survive a restart or scale-out")
+	}
+	guestTokens := auth.NewGuestTokenManager(guestSecret)
 
 	// Initialize handlers
-	cartHandler := handler.NewCartHandler(cartService, logger)
+	cartHandler := handler.NewCartHandler(cartService, guestTokens, logger)
 	healthHandler := handler.NewHealthHandler(repo.Client(), version)
 
 	// Initialize rate limiter
@@ -77,7 +91,7 @@ func main() {
 	}
 
 	// Setup router
-	router := setupRouter(cfg, cartHandler, healthHandler, jwtValidator, rateLimiter, logger)
+	router := setupRouter(cfg, cartHandler, healthHandler, jwtValidator, guestTokens, rateLimiter, logger)
 
 	// Create HTTP server
 	srv := &http.Server{
@@ -169,6 +183,7 @@ func setupRouter(
 	cartHandler *handler.CartHandler,
 	healthHandler *handler.HealthHandler,
 	jwtValidator *auth.JWTValidator,
+	guestTokens *auth.GuestTokenManager,
 	rateLimiter *handler.RateLimiter,
 	logger *zap.Logger,
 ) *gin.Engine {
@@ -195,9 +210,10 @@ func setupRouter(
 	api := router.Group("/api/v1")
 	api.Use(rateLimiter.Middleware())
 
-	// Apply authentication middleware
+	// Apply authentication middleware (guests allowed on cart routes; checkout/merge
+	// enforce authentication in the handler)
 	if cfg.OAuth2Enabled && jwtValidator != nil {
-		api.Use(handler.AuthMiddleware(jwtValidator, logger))
+		api.Use(handler.GuestOrAuthMiddleware(jwtValidator, guestTokens, logger))
 	} else {
 		api.Use(handler.MockAuthMiddleware())
 	}
@@ -211,6 +227,7 @@ func setupRouter(
 		cart.DELETE("/items/:itemId", cartHandler.RemoveItem)
 		cart.DELETE("", cartHandler.ClearCart)
 		cart.POST("/checkout", cartHandler.Checkout)
+		cart.POST("/merge", cartHandler.MergeGuestCart)
 	}
 
 	return router
