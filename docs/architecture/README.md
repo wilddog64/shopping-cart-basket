@@ -26,10 +26,12 @@ graph TD
 graph TD
     subgraph http[HTTP Layer - Gin]
         MW[Middleware: Auth · Logging · Correlation · Rate Limit · Security]
-        H[Handlers: CartHandler · HealthHandler · MetricsHandler]
+        CH[CartHandler]
+        HH[HealthHandler]
+        MH[MetricsHandler]
     end
     subgraph svc[Service]
-        CS[CartService<br>GetCart · AddItem · UpdateItemQuantity<br>RemoveItem · ClearCart · Checkout]
+        CS[CartService<br/>GetCart · AddItem · UpdateItemQuantity<br/>RemoveItem · ClearCart · Checkout]
     end
     subgraph infra[Infrastructure]
         Repo[RedisCartRepository]
@@ -38,8 +40,12 @@ graph TD
     Redis[(Redis)]
     RMQ[(RabbitMQ)]
 
-    MW --> H
-    H --> CS
+    MW --> CH
+    MW --> HH
+    MW --> MH
+    CH --> CS
+    HH --> CS
+    MH --> CS
     CS --> Repo
     CS --> Pub
     Repo --> Redis

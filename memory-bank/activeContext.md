@@ -1,8 +1,8 @@
 # Active Context: Basket Service
 
-## Current Status (2026-03-14)
+## Current Status (2026-07-15)
 
-CI green. All PRs merged to main. Branch protection active.
+Branch `feat/guest-cart` — **PR #13 open**, Go CI green. Backend verified locally end-to-end (containerized `golang:1.21` build/vet/unit + integration, live guest smoke, and authenticated login→merge in vCluster + dev Keycloak with a real RS256 JWT). Copilot flagged 2 merge-at-capacity issues → fixed in `12230f5` (see `docs/issues/2026-07-16-copilot-pr13-review-findings.md`), threads resolved. Awaiting owner merge.
 
 ## What's Implemented
 
@@ -20,6 +20,14 @@ CI green. All PRs merged to main. Branch protection active.
 
 ## Active Task
 
+- **Guest cart (Amazon-style)** — branch `feat/guest-cart`. Spec: `docs/plans/guest-cart.md`.
+  Admit anonymous guests on cart routes via a signed `X-Cart-Token` (new
+  `GuestOrAuthMiddleware` + `internal/auth/guest.go`), persist guest carts on a rolling 3-day
+  TTL (`GUEST_CART_TTL`, fixes the `ExpiresAt`-never-extended bug via `saveRolling`), require
+  auth at checkout, and add `POST /api/v1/cart/merge` to fold the guest cart into the user cart
+  on login. Frontend token-persistence + merge-on-login is a paired `feat/guest-cart` branch in
+  `shopping-cart-frontend`, to be cut from `origin/main` AFTER `feat/checkout-payment` merges.
+  Status: backend PR #13 open (CI green, Copilot findings fixed in `12230f5`, awaiting merge). Frontend remains deferred.
 - **Multi-arch workflow pin** — branch `fix/multiarch-workflow-pin` updates `.github/workflows/go-ci.yml` to reference infra SHA `999f8d7` so CI publishes amd64+arm64 images.
 - **v0.1.0 release** — cut `release/v0.1.0` from main, add CHANGELOG, open PR, tag after merge.
 

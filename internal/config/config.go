@@ -18,7 +18,9 @@ type Config struct {
 	RedisDB       int
 
 	// Cart settings
-	CartTTL time.Duration
+	CartTTL          time.Duration
+	GuestCartTTL     time.Duration
+	GuestTokenSecret string
 
 	// OAuth2 settings
 	OAuth2Enabled   bool
@@ -60,7 +62,9 @@ func Load() *Config {
 		RedisDB:       getEnvAsInt("REDIS_DB", 0),
 
 		// Cart
-		CartTTL: getEnvAsDuration("CART_TTL", 168*time.Hour), // 7 days
+		CartTTL:          getEnvAsDuration("CART_TTL", 168*time.Hour),      // 7 days
+		GuestCartTTL:     getEnvAsDuration("GUEST_CART_TTL", 72*time.Hour), // 3 days
+		GuestTokenSecret: getEnv("GUEST_TOKEN_SECRET", ""),
 
 		// OAuth2
 		OAuth2Enabled:   getEnvAsBool("OAUTH2_ENABLED", false),

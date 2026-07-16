@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/user/shopping-cart-basket/internal/auth"
 	"github.com/user/shopping-cart-basket/internal/model"
 	"github.com/user/shopping-cart-basket/internal/repository"
 	"github.com/user/shopping-cart-basket/internal/service"
@@ -14,15 +15,17 @@ import (
 
 // CartHandler handles cart HTTP requests
 type CartHandler struct {
-	service *service.CartService
-	logger  *zap.Logger
+	service     *service.CartService
+	guestTokens *auth.GuestTokenManager
+	logger      *zap.Logger
 }
 
 // NewCartHandler creates a new cart handler
-func NewCartHandler(service *service.CartService, logger *zap.Logger) *CartHandler {
+func NewCartHandler(service *service.CartService, guestTokens *auth.GuestTokenManager, logger *zap.Logger) *CartHandler {
 	return &CartHandler{
-		service: service,
-		logger:  logger,
+		service:     service,
+		guestTokens: guestTokens,
+		logger:      logger,
 	}
 }
 
@@ -183,6 +186,10 @@ func (h *CartHandler) ClearCart(c *gin.Context) {
 
 // Checkout handles POST /api/v1/cart/checkout
 func (h *CartHandler) Checkout(c *gin.Context) {
+	if isGuest(c) {
+		response.Unauthorized(c, "Authentication required to checkout")
+		return
+	}
 	customerID := getCustomerID(c)
 	if customerID == "" {
 		response.Unauthorized(c, "Customer ID not found")
@@ -217,6 +224,54 @@ func (h *CartHandler) Checkout(c *gin.Context) {
 		"message": "Checkout successful",
 		"cart":    cart.ToResponse(),
 	})
+}
+
+// MergeGuestCart handles POST /api/v1/cart/merge — folds the guest cart identified
+// by the X-Cart-Token header into the authenticated user's cart, then deletes it.
+func (h *CartHandler) MergeGuestCart(c *gin.Context) {
+	if isGuest(c) {
+		response.Unauthorized(c, "Authentication required to merge cart")
+		return
+	}
+	customerID := getCustomerID(c)
+	if customerID == "" {
+		response.Unauthorized(c, "Customer ID not found")
+		return
+	}
+
+	guestToken := c.GetHeader("X-Cart-Token")
+	if guestToken == "" {
+		cart, err := h.service.GetCart(c.Request.Context(), customerID)
+		if err != nil {
+			response.InternalError(c, "Failed to get cart")
+			return
+		}
+		response.Success(c, cart.ToResponse())
+		return
+	}
+
+	guestID, err := h.guestTokens.Verify(guestToken)
+	if err != nil {
+		response.BadRequest(c, "Invalid guest token")
+		return
+	}
+
+	cart, err := h.service.MergeGuestCart(c.Request.Context(), guestID, customerID)
+	if err != nil {
+		if errors.Is(err, service.ErrMaxItemsExceeded) {
+			response.BadRequest(c, "Maximum cart items exceeded")
+			return
+		}
+		h.logger.Error("failed to merge guest cart",
+			zap.String("customerId", customerID),
+			zap.String("guestId", guestID),
+			zap.Error(err),
+		)
+		response.InternalError(c, "Failed to merge cart")
+		return
+	}
+
+	response.Success(c, cart.ToResponse())
 }
 
 // Context key for customer ID

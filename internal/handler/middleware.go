@@ -13,6 +13,19 @@ import (
 	"go.uber.org/zap"
 )
 
+// Context key for the guest flag
+const isGuestKey = "isGuest"
+
+// isGuest reports whether the current request is an anonymous guest.
+func isGuest(c *gin.Context) bool {
+	if v, ok := c.Get(isGuestKey); ok {
+		if b, ok2 := v.(bool); ok2 {
+			return b
+		}
+	}
+	return false
+}
+
 // RequestLogger returns a middleware that logs requests
 func RequestLogger(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -167,6 +180,55 @@ func AuthMiddleware(jwtValidator *auth.JWTValidator, logger *zap.Logger) gin.Han
 		c.Set("claims", claims)
 		c.Set("roles", claims.Roles)
 
+		c.Next()
+	}
+}
+
+// GuestOrAuthMiddleware admits either an authenticated user (valid JWT) or an
+// anonymous guest identified by a signed guest token. Guests arriving without a
+// valid token are issued a fresh one via the X-Cart-Token response header.
+func GuestOrAuthMiddleware(jwtValidator *auth.JWTValidator, guestTokens *auth.GuestTokenManager, logger *zap.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader != "" {
+			parts := strings.SplitN(authHeader, " ", 2)
+			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+					"success": false,
+					"error":   gin.H{"code": "UNAUTHORIZED", "message": "Invalid authorization header format"},
+				})
+				return
+			}
+			claims, err := jwtValidator.ValidateToken(c.Request.Context(), parts[1])
+			if err != nil {
+				logger.Warn("token validation failed", zap.Error(err), zap.String("ip", c.ClientIP()))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+					"success": false,
+					"error":   gin.H{"code": "UNAUTHORIZED", "message": "Invalid or expired token"},
+				})
+				return
+			}
+			SetCustomerID(c, claims.Subject)
+			c.Set("claims", claims)
+			c.Set("roles", claims.Roles)
+			c.Set(isGuestKey, false)
+			c.Next()
+			return
+		}
+
+		var guestID string
+		if token := c.GetHeader("X-Cart-Token"); token != "" {
+			if id, err := guestTokens.Verify(token); err == nil {
+				guestID = id
+			}
+		}
+		if guestID == "" {
+			guestID = guestTokens.NewGuestID()
+		}
+		c.Header("X-Cart-Token", guestTokens.Sign(guestID))
+		SetCustomerID(c, guestID)
+		c.Set("roles", []string{"cart-guest"})
+		c.Set(isGuestKey, true)
 		c.Next()
 	}
 }
