@@ -1,8 +1,8 @@
 # Active Context: Basket Service
 
-## Current Status (2026-03-14)
+## Current Status (2026-07-15)
 
-CI green. All PRs merged to main. Branch protection active.
+Branch `feat/guest-cart` implemented and pushed at `2ba9114`, pending CI/PR. Local Go verification is still pending because `go version` returned `command not found` in this environment.
 
 ## What's Implemented
 
@@ -27,7 +27,7 @@ CI green. All PRs merged to main. Branch protection active.
   auth at checkout, and add `POST /api/v1/cart/merge` to fold the guest cart into the user cart
   on login. Frontend token-persistence + merge-on-login is a paired `feat/guest-cart` branch in
   `shopping-cart-frontend`, to be cut from `origin/main` AFTER `feat/checkout-payment` merges.
-  Status: spec written, handed to Codex.
+  Status: backend implemented and pushed in `2ba9114`, pending CI/PR. Frontend remains deferred.
 - **Multi-arch workflow pin** — branch `fix/multiarch-workflow-pin` updates `.github/workflows/go-ci.yml` to reference infra SHA `999f8d7` so CI publishes amd64+arm64 images.
 - **v0.1.0 release** — cut `release/v0.1.0` from main, add CHANGELOG, open PR, tag after merge.
 
