@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -448,5 +449,81 @@ func TestCartService_MergeGuestCart_NoGuestCart(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Same(t, userCart, cart)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestCartService_MergeGuestCart_ExistingProductAtCapacity(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := new(MockCartRepository)
+	mockPublisher := new(MockEventPublisher)
+	logger := zap.NewNop()
+
+	userCart := model.NewCart("customer-123", 24*time.Hour)
+	for i := 0; i < MaxCartItems; i++ {
+		userCart.AddItem(model.CartItem{
+			ProductID: fmt.Sprintf("prod-%d", i),
+			Name:      "Product",
+			Quantity:  1,
+			UnitPrice: 1.00,
+		})
+	}
+	guestCart := model.NewCart("guest-123", 72*time.Hour)
+	guestCart.AddItem(model.CartItem{
+		ProductID: "prod-0",
+		Name:      "Product",
+		Quantity:  2,
+		UnitPrice: 1.00,
+	})
+
+	mockRepo.On("Get", ctx, "customer-123").Return(userCart, nil)
+	mockRepo.On("Get", ctx, "guest-123").Return(guestCart, nil)
+	mockRepo.On("Save", ctx, mock.AnythingOfType("*model.Cart")).Return(nil)
+	mockRepo.On("Delete", ctx, "guest-123").Return(nil)
+	mockPublisher.On("Publish", ctx, mock.AnythingOfType("*model.EventEnvelope")).Return(nil)
+
+	service := NewCartService(mockRepo, mockPublisher, 24*time.Hour, 72*time.Hour, logger)
+
+	cart, err := service.MergeGuestCart(ctx, "guest-123", "customer-123")
+
+	require.NoError(t, err)
+	require.Len(t, cart.Items, MaxCartItems)
+	assert.Equal(t, 3, cart.Items[0].Quantity)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestCartService_MergeGuestCart_NewProductAtCapacity(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := new(MockCartRepository)
+	mockPublisher := new(MockEventPublisher)
+	logger := zap.NewNop()
+
+	userCart := model.NewCart("customer-123", 24*time.Hour)
+	for i := 0; i < MaxCartItems; i++ {
+		userCart.AddItem(model.CartItem{
+			ProductID: fmt.Sprintf("prod-%d", i),
+			Name:      "Product",
+			Quantity:  1,
+			UnitPrice: 1.00,
+		})
+	}
+	guestCart := model.NewCart("guest-123", 72*time.Hour)
+	guestCart.AddItem(model.CartItem{
+		ProductID: "prod-new",
+		Name:      "New Product",
+		Quantity:  1,
+		UnitPrice: 5.00,
+	})
+
+	mockRepo.On("Get", ctx, "customer-123").Return(userCart, nil)
+	mockRepo.On("Get", ctx, "guest-123").Return(guestCart, nil)
+
+	service := NewCartService(mockRepo, mockPublisher, 24*time.Hour, 72*time.Hour, logger)
+
+	cart, err := service.MergeGuestCart(ctx, "guest-123", "customer-123")
+
+	assert.Nil(t, cart)
+	assert.ErrorIs(t, err, ErrMaxItemsExceeded)
+	mockRepo.AssertNotCalled(t, "Save", ctx, mock.AnythingOfType("*model.Cart"))
+	mockRepo.AssertNotCalled(t, "Delete", ctx, "guest-123")
 	mockRepo.AssertExpectations(t)
 }

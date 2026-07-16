@@ -64,6 +64,16 @@ func (c *Cart) AddItem(item CartItem) {
 	c.UpdatedAt = time.Now()
 }
 
+// ContainsProduct reports whether the cart already has an item for the product.
+func (c *Cart) ContainsProduct(productID string) bool {
+	for _, item := range c.Items {
+		if item.ProductID == productID {
+			return true
+		}
+	}
+	return false
+}
+
 // UpdateItemQuantity updates the quantity of an item
 func (c *Cart) UpdateItemQuantity(itemID string, quantity int) bool {
 	for i, item := range c.Items {
