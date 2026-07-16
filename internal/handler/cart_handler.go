@@ -258,6 +258,10 @@ func (h *CartHandler) MergeGuestCart(c *gin.Context) {
 
 	cart, err := h.service.MergeGuestCart(c.Request.Context(), guestID, customerID)
 	if err != nil {
+		if errors.Is(err, service.ErrMaxItemsExceeded) {
+			response.BadRequest(c, "Maximum cart items exceeded")
+			return
+		}
 		h.logger.Error("failed to merge guest cart",
 			zap.String("customerId", customerID),
 			zap.String("guestId", guestID),

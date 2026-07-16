@@ -313,8 +313,8 @@ func (s *CartService) MergeGuestCart(ctx context.Context, guestID, customerID st
 	}
 
 	for _, item := range guestCart.Items {
-		if len(userCart.Items) >= MaxCartItems {
-			break
+		if !userCart.ContainsProduct(item.ProductID) && len(userCart.Items) >= MaxCartItems {
+			return nil, ErrMaxItemsExceeded
 		}
 		userCart.AddItem(item)
 	}
