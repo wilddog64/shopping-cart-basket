@@ -193,6 +193,7 @@ shopping-cart-basket/
 - **[Troubleshooting Guide](docs/troubleshooting/README.md)** — Redis/auth/data/perf issue playbooks.
 
 ### Issue Logs
+- **[Copilot PR #13 — guest cart merge](docs/issues/2026-07-16-copilot-pr13-review-findings.md)** — merge-at-capacity silently dropped guest items; overflow now returns 400.
 - **[README/docs structure drift](docs/issues/2026-03-17-readme-standardization.md)** — documentation standardization record.
 
 ---
