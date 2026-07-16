@@ -40,7 +40,7 @@ func setupIntegrationService(t *testing.T) (*CartService, *repository.RedisCartR
 
 	logger := zap.NewNop()
 	publisher := &NoOpPublisher{}
-	service := NewCartService(repo, publisher, 1*time.Hour, logger)
+	service := NewCartService(repo, publisher, 1*time.Hour, 72*time.Hour, logger)
 
 	return service, repo
 }
