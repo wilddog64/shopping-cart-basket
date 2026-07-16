@@ -20,6 +20,14 @@ CI green. All PRs merged to main. Branch protection active.
 
 ## Active Task
 
+- **Guest cart (Amazon-style)** — branch `feat/guest-cart`. Spec: `docs/plans/guest-cart.md`.
+  Admit anonymous guests on cart routes via a signed `X-Cart-Token` (new
+  `GuestOrAuthMiddleware` + `internal/auth/guest.go`), persist guest carts on a rolling 3-day
+  TTL (`GUEST_CART_TTL`, fixes the `ExpiresAt`-never-extended bug via `saveRolling`), require
+  auth at checkout, and add `POST /api/v1/cart/merge` to fold the guest cart into the user cart
+  on login. Frontend token-persistence + merge-on-login is a paired `feat/guest-cart` branch in
+  `shopping-cart-frontend`, to be cut from `origin/main` AFTER `feat/checkout-payment` merges.
+  Status: spec written, handed to Codex.
 - **Multi-arch workflow pin** — branch `fix/multiarch-workflow-pin` updates `.github/workflows/go-ci.yml` to reference infra SHA `999f8d7` so CI publishes amd64+arm64 images.
 - **v0.1.0 release** — cut `release/v0.1.0` from main, add CHANGELOG, open PR, tag after merge.
 
