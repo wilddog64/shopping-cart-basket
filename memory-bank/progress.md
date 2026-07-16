@@ -10,8 +10,9 @@
 - [x] Added guest-aware rolling TTL logic and guest-to-user merge flow in `CartService`
 - [x] Wired guest token manager through `cmd/server/main.go`, including ephemeral-secret fallback when config is unset
 - [x] Updated cart service tests for guest TTL, rolling expiry, and merge behavior
-- [ ] Local verification pending in this environment: `go version` returned `command not found`, so `go build ./...`, `go vet ./...`, and `go test ./...` were not run here
-- [x] Backend implementation pushed to `origin/feat/guest-cart` at commit `2ba9114`
+- [x] Verified end-to-end via `golang:1.21` container (build/vet/unit + integration), live guest smoke, and authenticated login→merge in vCluster + dev Keycloak with a real RS256 JWT (host had no Go)
+- [x] Copilot merge-at-capacity findings fixed pre-merge in `25c3d5b` with regression tests (`docs/issues/2026-07-16-copilot-pr13-review-findings.md`)
+- [x] Backend implementation merged — PR #13 → `main` (`d79e5753`, 2026-07-16)
 
 ### Core Application
 - [x] Domain model: `Cart`, `CartItem`, `ShippingAddress` with all business methods
