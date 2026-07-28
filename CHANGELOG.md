@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- `.github/workflows/dependabot-automerge.yml`: auto-merge Dependabot minor/patch version updates and all security updates (any semver, via `alert-lookup`) with `gh pr merge --auto --squash` once required CI checks pass; **non-security** major bumps stay open for review (`dependabot/fetch-metadata` pinned to v2.3.0; `pull_request_target` scoped to `main`, job-level least-privilege permissions, gated on the PR author, no PR-head checkout)
 - `.github/dependabot.yml`: Dependabot scheduled version updates for Go modules, Docker base images, and GitHub Actions (weekly; minor/patch grouped, majors separate). Repository-level Dependabot security updates (immediate advisory-triggered PRs) are enabled separately as a repo setting — together they close the first-mile CVE gap so a flagged app dependency opens an update PR that CI builds into a clean image
 - Guest cart support: unauthenticated users can build a cart via a signed HMAC `X-Cart-Token` (`internal/auth/guest.go`), with a 3-day rolling TTL refreshed on every write
 - `POST /api/v1/cart/merge`: authenticated endpoint that merges a guest cart into the caller's cart (quantities summed per product), then deletes the guest cart
