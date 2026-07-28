@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- `.github/dependabot.yml`: Dependabot version + security updates for Go modules, Docker base images, and GitHub Actions (weekly schedule; minor/patch grouped, majors separate) — closes the first-mile CVE gap so an advisory-flagged app dependency opens an update PR that CI builds into a clean image
 - Guest cart support: unauthenticated users can build a cart via a signed HMAC `X-Cart-Token` (`internal/auth/guest.go`), with a 3-day rolling TTL refreshed on every write
 - `POST /api/v1/cart/merge`: authenticated endpoint that merges a guest cart into the caller's cart (quantities summed per product), then deletes the guest cart
 - `GuestOrAuthMiddleware`: accepts either a Bearer JWT or a guest cart token, keeping checkout auth-gated while allowing anonymous browsing
