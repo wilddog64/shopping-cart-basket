@@ -287,7 +287,6 @@ func TestCartService_Checkout(t *testing.T) {
 	})
 
 	mockRepo.On("Get", ctx, "customer-123").Return(existingCart, nil)
-	mockRepo.On("Save", ctx, mock.AnythingOfType("*model.Cart")).Return(nil)
 	mockPublisher.On("Publish", ctx, mock.AnythingOfType("*model.EventEnvelope")).Return(nil)
 
 	service := NewCartService(mockRepo, mockPublisher, 24*time.Hour, 72*time.Hour, logger)
