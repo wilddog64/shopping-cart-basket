@@ -1,5 +1,9 @@
 # Active Context: Basket Service
 
+## Latest completed task
+
+- **Stripe checkout cart-clear fix COMPLETE `c3bcd9b` on `origin/feat/stripe-checkout-cart-clear` (2026-08-01).** Basket checkout now publishes without clearing; the order orchestrator owns clearing after payment. Unit, build, vet, formatting, and integration-tag compile gates passed.
+
 ## Current Status (2026-07-15)
 
 Branch `feat/guest-cart` — **PR #13 open**, Go CI green. Backend verified locally end-to-end (containerized `golang:1.21` build/vet/unit + integration, live guest smoke, and authenticated login→merge in vCluster + dev Keycloak with a real RS256 JWT). Copilot flagged 2 merge-at-capacity issues → fixed in `12230f5` (see `docs/issues/2026-07-16-copilot-pr13-review-findings.md`), threads resolved. Awaiting owner merge.

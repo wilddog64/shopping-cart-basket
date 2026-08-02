@@ -277,23 +277,18 @@ func (s *CartService) Checkout(ctx context.Context, customerID string, req *mode
 		}
 	}
 
-	// Clear the cart after successful checkout
-	cartCopy := *cart // Keep a copy for the response
-	cart.Clear()
-	if err := s.repo.Save(ctx, cart); err != nil {
-		s.logger.Warn("failed to clear cart after checkout",
-			zap.String("cartId", cart.ID),
-			zap.Error(err),
-		)
-	}
-
-	s.logger.Info("cart checkout completed",
-		zap.String("cartId", cartCopy.ID),
+	// The cart is intentionally NOT cleared here. Cart clearing is owned by the
+	// order-service checkout orchestrator, which clears the cart only after the
+	// order reaches PAID (see stripe-checkout-orchestration-design.md). Clearing
+	// on the basket checkout event was premature — it emptied the cart before any
+	// payment succeeded.
+	s.logger.Info("cart checkout event published",
+		zap.String("cartId", cart.ID),
 		zap.String("customerId", customerID),
-		zap.Float64("totalAmount", cartCopy.TotalAmount),
+		zap.Float64("totalAmount", cart.TotalAmount),
 	)
 
-	return &cartCopy, nil
+	return cart, nil
 }
 
 // MergeGuestCart folds a guest cart into the authenticated user's cart and deletes

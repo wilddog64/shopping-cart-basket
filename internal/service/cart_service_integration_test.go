@@ -326,10 +326,11 @@ func TestCartService_Integration_Checkout(t *testing.T) {
 	assert.Len(t, cart.Items, 2)
 	assert.InDelta(t, 109.97, cart.TotalAmount, 0.01) // (2*29.99) + 49.99
 
-	// Cart should be cleared after checkout
+	// Cart must NOT be cleared by basket checkout — clearing is owned by the
+	// order-service orchestrator and happens only after the order is PAID.
 	postCheckout, err := service.GetCart(ctx, customerID)
 	require.NoError(t, err)
-	assert.Empty(t, postCheckout.Items)
+	assert.Len(t, postCheckout.Items, 2)
 }
 
 func TestCartService_Integration_Checkout_EmptyCart(t *testing.T) {
