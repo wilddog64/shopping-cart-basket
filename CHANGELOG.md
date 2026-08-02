@@ -12,6 +12,7 @@
 - `.githooks/pre-push`: pre-push hook to block accidental direct pushes from feature branches to main; bypass with `ALLOW_MAIN_PUSH=1`
 
 ### Fixed
+- Stop clearing the cart on basket checkout (Stripe checkout Phase D): the basket no longer empties the cart when checkout is initiated. The order orchestrator now owns cart clearing and clears only after the order reaches PAID, so a failed or abandoned payment no longer loses the shopper's cart. Spec: `docs/plans/` Phase D basket stop premature cart clear.
 - `k8s/base/configmap.yaml`: OAUTH2_ISSUER_URI changed from `keycloak.identity.svc.cluster.local:8080` to `keycloak.shopping-cart.local` to match actual JWT iss claim and remove incorrect port; allows ubuntu-k3s pods to reach Keycloak via cross-cluster DNS resolution
 
 ### Changed
