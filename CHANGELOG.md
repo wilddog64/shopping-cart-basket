@@ -16,6 +16,7 @@
 - `k8s/base/configmap.yaml`: OAUTH2_ISSUER_URI changed from `keycloak.identity.svc.cluster.local:8080` to `keycloak.shopping-cart.local` to match actual JWT iss claim and remove incorrect port; allows ubuntu-k3s pods to reach Keycloak via cross-cluster DNS resolution
 
 ### Changed
+- `.github/dependabot.yml`: defer the `golangci/golangci-lint-action` semver-major (v9 defaults to golangci-lint v2, whose config schema breaks this repo's v1-style `.golangci.yml`); other GitHub Actions majors still flow. Stops Dependabot recreating the failing v9 PR each week. Spec: `docs/plans/dependabot-defer-golangci-action-major.md`
 - Reduce deployment replicas from 2 to 1 for dev/test environment; HPAs not applicable on single-node cluster (will reintroduce in v1.1.0 EKS)
 - `k8s/base/deployment.yaml`: set rolling update to `maxSurge: 0` / `maxUnavailable: 1` (recreate-style) so rollouts complete on the single-node hostinger cluster instead of wedging with an unschedulable surge pod
 
