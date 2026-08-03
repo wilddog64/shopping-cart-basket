@@ -19,3 +19,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # golangci-lint-action v9 defaults to golangci-lint v2, whose config schema
+      # breaks this repo's v1-style .golangci.yml. Deferred until a deliberate
+      # golangci-lint v1→v2 migration. Other Actions majors still flow — narrow
+      # this rule (or remove it) when the migration is scheduled.
+      - dependency-name: "golangci/golangci-lint-action"
+        update-types: ["version-update:semver-major"]
