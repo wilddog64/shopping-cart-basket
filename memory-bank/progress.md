@@ -1,5 +1,7 @@
 # Progress: Basket Service
 
+- [x] **Stripe checkout cart-clear fix COMPLETE `c3bcd9b` on `origin/feat/stripe-checkout-cart-clear` (2026-08-01).** Removed premature checkout clear/save, corrected the checkout unit expectation, and asserted integration cart persistence; all specified gates passed.
+
 ## What's Built
 
 ### Guest Cart (branch: feat/guest-cart)
