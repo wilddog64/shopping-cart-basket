@@ -50,7 +50,11 @@ func main() {
 	if err != nil {
 		logger.Fatal("failed to connect to Redis", zap.Error(err))
 	}
-	defer repo.Close()
+	defer func() {
+		if err := repo.Close(); err != nil {
+			logger.Error("failed to close Redis repository", zap.Error(err))
+		}
+	}()
 
 	logger.Info("connected to Redis", zap.String("addr", cfg.RedisAddr()))
 
