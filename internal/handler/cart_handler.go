@@ -105,7 +105,7 @@ func (h *CartHandler) UpdateItem(c *gin.Context) {
 		return
 	}
 
-	cart, err := h.service.UpdateItemQuantity(c.Request.Context(), customerID, itemID, req.Quantity)
+	cart, err := h.service.UpdateItemQuantity(c.Request.Context(), customerID, itemID, *req.Quantity)
 	if err != nil {
 		if errors.Is(err, service.ErrItemNotFound) {
 			response.NotFound(c, "Item not found in cart")
