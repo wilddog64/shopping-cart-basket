@@ -148,7 +148,7 @@ type AddItemRequest struct {
 
 // UpdateItemRequest represents a request to update item quantity
 type UpdateItemRequest struct {
-	Quantity int `json:"quantity" binding:"required,min=0"`
+	Quantity *int `json:"quantity" binding:"required,min=0"`
 }
 
 // CheckoutRequest represents a checkout request
