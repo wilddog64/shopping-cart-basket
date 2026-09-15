@@ -68,7 +68,7 @@ jobs:
     name: Publish
     needs: [test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    uses: wilddog64/shopping-cart-infra/.github/workflows/build-push-deploy.yml@45def89e151bc9d3506f7d641f46d045bc84029d
+    uses: wilddog64/shopping-cart-infra/.github/workflows/build-push-deploy.yml@1b35d962b6e4c095348a09f7a41d79b755b6f6cd
     with:
       service-name: shopping-cart-basket
       image-name: ghcr.io/wilddog64/shopping-cart-basket
