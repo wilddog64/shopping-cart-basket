@@ -12,6 +12,10 @@
 - `.githooks/pre-push`: pre-push hook to block accidental direct pushes from feature branches to main; bypass with `ALLOW_MAIN_PUSH=1`
 
 ### Fixed
+- **Dependabot auto-merges now build an image.** Auto-merge was enabled with `GITHUB_TOKEN`, so the merge
+  was made as `github-actions`, and GitHub starts no workflow for that push: dependency and base-image fixes
+  reached `main` but no image. Auto-merge is now enabled with a GitHub App installation token
+  (`AUTOMERGE_APP_CLIENT_ID` / `AUTOMERGE_APP_PRIVATE_KEY`), whose merge push runs the normal build.
 - Stop clearing the cart on basket checkout (Stripe checkout Phase D): the basket no longer empties the cart when checkout is initiated. The order orchestrator now owns cart clearing and clears only after the order reaches PAID, so a failed or abandoned payment no longer loses the shopper's cart. Spec: `docs/plans/` Phase D basket stop premature cart clear.
 - `k8s/base/configmap.yaml`: OAUTH2_ISSUER_URI changed from `keycloak.identity.svc.cluster.local:8080` to `keycloak.shopping-cart.local` to match actual JWT iss claim and remove incorrect port; allows ubuntu-k3s pods to reach Keycloak via cross-cluster DNS resolution
 - CI workflow: bump the `build-push-deploy.yml` reusable workflow from `45def89e` to `98b10f05` (shopping-cart-infra #107). The old promote step fell back to `git pull --rebase` when the image-tag commit-back raced another promotion; two promotions always rewrite the same `newTag:` line, so the rebase conflicted every time and a rerun could never recover. The new step re-fetches the tip, resets onto it and reapplies the tag in a bounded retry loop, and skips when the pinned tag already belongs to a newer commit, so an older build can never move `newTag` backwards. First live run: shopping-cart-payment #83 (main run 37088705440 promoted on attempt 1)
