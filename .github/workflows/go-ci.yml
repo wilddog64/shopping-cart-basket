@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -67,7 +68,7 @@ jobs:
   publish:
     name: Publish
     needs: [test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     uses: wilddog64/shopping-cart-infra/.github/workflows/build-push-deploy.yml@c7ff88aa9bc899876a41b9ddf33fd0606c9ce690
     with:
       service-name: shopping-cart-basket
